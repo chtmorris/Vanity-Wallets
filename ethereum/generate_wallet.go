@@ -12,7 +12,7 @@ import (
 
 var attempts int
 
-func genAddress() string {
+func genAddress(inputLength int) string {
   privateKey, err := crypto.GenerateKey()
   if err != nil {
     log.Fatal(err)
@@ -30,19 +30,25 @@ func genAddress() string {
   address := crypto.PubkeyToAddress(*publicKeyECDSA).Hex()
   fmt.Println("Public key:", address) // 0x96216849c49358B10257cb55b28eA603c874b05E
 
-  return strings.ToLower(address[0:6])
+  return strings.ToLower(address[0:inputLength])
 }
 
-func runIteration (x string) {
-  if x == "0xcccc" {
-    fmt.Println("Success")
+func runIteration (generatedPubKey, inputText string) {
+  if generatedPubKey == inputText {
+    fmt.Println("Successful key generated ;-)")
   } else {
     attempts++
     fmt.Println("Attempt number:", attempts)
-    runIteration(genAddress())
+    runIteration(genAddress(len(inputText)), inputText)
   }
 }
 
 func main() {
-  runIteration(genAddress())
+  fmt.Print("What would you like it say after 0x:")
+  var input string
+  fmt.Scanln(&input)
+  input = "0x" + input
+  var inputLength = len(input)
+
+  runIteration(genAddress(inputLength), input)
 }
