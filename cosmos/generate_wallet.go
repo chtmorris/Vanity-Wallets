@@ -1,33 +1,48 @@
 package main
 
 import (
-    "fmt"
-    "github.com/tyler-smith/go-bip39"
-    "github.com/tyler-smith/go-bip32"
+	"fmt"
+	"strings"
+
+	"github.com/cosmos/cosmos-sdk/crypto/keys"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 var attempts int
 
-func genAddress() {
-  // Generate a mnemonic for memorization or user-friendly seeds
-  entropy, _ := bip39.NewEntropy(256)
-  mnemonic, _ := bip39.NewMnemonic(entropy)
+func genAddress(inputLength int) string {
 
-  // Generate a Bip32 HD wallet for the mnemonic and a user supplied password
-  seed := bip39.NewSeed(mnemonic, "Secret Passphrase")
+	cstore := keys.NewInMemory()
 
-  masterKey, _ := bip32.NewMasterKey(seed)
-  publicKey := masterKey.PublicKey()
+	info, seed, err := cstore.CreateMnemonic("john", keys.English, "secretcpw", keys.Secp256k1)
+	if err != nil {
+		panic(err)
+	}
 
-  // Display mnemonic and keys
-  fmt.Println("Mnemonic: ", mnemonic)
-  fmt.Println("Master private key: ", masterKey)
-  fmt.Println("Master public key: ", publicKey)
+	address := sdk.AccAddress(info.GetPubKey().Address()).String()
 
-  // TODO: Convert to cosmos address
+	fmt.Println(address, seed)
+
+	return strings.ToLower(address[0:inputLength])
 
 }
 
+func runIteration(generatedPubKey, inputText string) {
+	if generatedPubKey == inputText {
+		fmt.Println("Successful key generated ;-)")
+	} else {
+		attempts++
+		fmt.Println("Attempt number:", attempts)
+		runIteration(genAddress(len(inputText)), inputText)
+	}
+}
+
 func main() {
-  genAddress()
+	fmt.Print("What would you like it say after cosmos1:")
+	var input string
+	fmt.Scanln(&input)
+	input = "cosmos1" + input
+	var inputLength = len(input)
+
+	runIteration(genAddress(inputLength), input)
 }
